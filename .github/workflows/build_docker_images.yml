@@ -8,9 +8,6 @@
 
 name: Docker Images
 
-env:
-  DEVICE_VERSION: 24.10.2
-
 on:
   workflow_dispatch:
   schedule:
@@ -40,19 +37,19 @@ jobs:
 
       - name: Download Image Builder
         run: |
-          wget -q https://downloads.openwrt.org/releases/$DEVICE_VERSION/targets\
-          /x86/64/openwrt-imagebuilder-$DEVICE_VERSION-x86-64.Linux-x86_64.tar.zst
+          wget -q https://downloads.openwrt.org/snapshots/targets\
+          /x86/64/openwrt-imagebuilder-x86-64.Linux-x86_64.tar.zst
 
       - name: Set Image Builder
         run: |
           tar -I zstd -xvf *.tar.zst
-          cd openwrt-imagebuilder-$DEVICE_VERSION-x86-64.Linux-x86_64
+          cd openwrt-imagebuilder-x86-64.Linux-x86_64
           cp -rf $GITHUB_WORKSPACE/files .
           chmod +x files/etc/rc.local
 
       - name: Build RootFS
         run: |
-          cd openwrt-imagebuilder-$DEVICE_VERSION-x86-64.Linux-x86_64
+          cd openwrt-imagebuilder-x86-64.Linux-x86_64
           chmod +x $GITHUB_WORKSPACE/scripts/*
           $GITHUB_WORKSPACE/scripts/preset-terminal-tools.sh
           export CONFIG_PACKAGES=$(cat $GITHUB_WORKSPACE/config/packages.config | tr -s "\n" " ")
@@ -81,3 +78,21 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/openwrt:alpha
+      
+      - name: Generate Release Body
+        id: generate_body
+        run: |
+          echo "RELEASE_BODY=Build at $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_ENV
+          cd $GITHUB_WORKSPACE
+          docker save -o openwrt-latest.tar wbmins/openwrt:latest
+          docker save -o openwrt-alpha.tar wbmins/openwrt:alpha
+
+      - name: Upload and Overwrite Release Assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ${{ github.workspace }}/openwrt-latest.tar
+            ${{ github.workspace }}/openwrt-alpha.tar
+          tag_name: latest
+          overwrite: true
+          body: ${{ env.RELEASE_BODY }}
