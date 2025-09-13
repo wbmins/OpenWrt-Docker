@@ -1,4 +1,4 @@
-[![Docker Images](https://github.com/wbmins/ImmortalWrt-Docker/actions/workflows/build_docker_images.yml/badge.svg)](https://github.com/wbmins/ImmortalWrt-Docker/actions/workflows/build_docker_images.yml)
+[![Docker Images](https://github.com/wbmins/OpenWrt-Docker/actions/workflows/build_docker_images.yml/badge.svg)](https://github.com/wbmins/OpenWrt-Docker/actions/workflows/build_docker_images.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/wbmins/openwrt.svg?label=Docker%20Pulls&logo=docker&color=orange)](https://hub.docker.com/r/wbmins/openwrt)
 <details>
    <summary>使用方法</summary>
@@ -16,11 +16,13 @@ services:
     privileged: true
     restart: always
     networks:
-      macnet
+      - macnet
 
+# docker network create -d macvlan --subnet=192.168.1.0/24 --gateway=192.168.1.1 -o parent=enp1s0 maclan
 networks:
   macnet:
     driver: macvlan
+    name: macnet
     driver_opts:
       parent: enp1s0 # 第一步的网卡
     ipam:
@@ -29,17 +31,21 @@ networks:
           gateway: 192.168.1.1 #网关
 ```
 
-3、进入容器内部环境
+3、修改网络配置并重启网络
 ```
-docker exec -it openwrt ash
-```
-4、根据自己实际情况修改网络配置，修改完成后保存配置
-```
-vi /etc/config/network
-```
-5、退出容器内部环境，在宿主机环境执行重启容器命令
-```
-docker container restart openwrt
+docker exec openwrt sh -c "
+#填写IP地址
+uci set network.lan.ipaddr='192.168.1.2'
+#填写子网掩码
+uci set network.lan.netmask='255.255.255.0'
+#填写网关
+uci set network.lan.gateway='192.168.1.1'
+#填写DNS服务器
+uci set network.lan.dns='192.168.1.1'
+uci commit
+#重启网络
+/etc/init.d/network restart
+"
 ```
 </details>
 
@@ -71,7 +77,7 @@ docker container restart openwrt
 <details>
    <summary>特别鸣谢</summary>
 
-- [OpenWrt-Docker](https://github.com/SuLingGG/OpenWrt-Docker)
+- [zzsrv/OpenWrt-Docker](https://github.com/zzsrv/OpenWrt-Docker)
 - [SuLingGG/OpenWrt-Docker](https://github.com/SuLingGG/OpenWrt-Docker)
 - [ImmortalWrt OpenWrt Source](https://github.com/immortalwrt/immortalwrt)
 - [P3TERX/Actions-OpenWrt](https://github.com/P3TERX/Actions-OpenWrt)
