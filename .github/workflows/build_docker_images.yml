@@ -9,7 +9,7 @@
 name: Docker Images
 
 env:
-  DEVICE_VERSION: 24.10.2
+  DEVICE_VERSION: 24.10.3
 
 on:
   workflow_dispatch:
