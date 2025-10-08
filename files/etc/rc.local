@@ -6,4 +6,8 @@ umount /etc/resolv.conf
 rm /etc/resolv.conf
 ln -s /tmp/resolv.conf.auto /etc/resolv.conf
 
+if [ -n "$root_password" ]; then
+  (echo "$root_password"; sleep 1; echo "$root_password") | passwd > /dev/null
+fi
+
 exit 0
