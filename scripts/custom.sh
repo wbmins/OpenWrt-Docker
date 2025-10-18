@@ -37,20 +37,26 @@ export http_proxy=http://127.0.0.1:7890
 export https_proxy=$http_proxy
 
 alias la='lsd -lah'
+alias uu="opkg update && opkg list-upgradable"
 alias ua="opkg update && opkg list-upgradable | cut -f 1 -d ' ' | xargs -r opkg upgrade"
 EOF
 
 # 安装nikki/momo
 if [[ "${1:-}" == "nikki" ]]; then
     wget -O - https://github.com/nikkinikki-org/OpenWrt-nikki/raw/refs/heads/main/feed.sh | ash
-    opkg update
     opkg install luci-i18n-nikki-zh-cn
 elif [[ "${1:-}" == "momo" ]]; then
     wget -O - https://github.com/nikkinikki-org/OpenWrt-momo/raw/refs/heads/main/feed.sh | ash
-    opkg update
-    opkg install sing-box
-    /etc/init.d/sing-box disable
     opkg install luci-i18n-momo-zh-cn
+    /etc/init.d/sing-box disable
+
+    URL=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+    | jsonfilter -e '@.assets[*].browser_download_url' \
+    | grep 'linux-amd64\.tar\.gz' \
+    | head -n1)
+    FILE=$(basename "$URL")
+    curl -L -o "/tmp/$FILE" "$URL"
+    tar -xzf "/tmp/$FILE" -C /tmp/ && mv "/tmp/$(tar -tzf "/tmp/$FILE" | head -n1 | cut -f1 -d"/")/sing-box" /usr/bin/
 fi
 
 # 修改为科大源
