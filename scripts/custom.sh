@@ -41,13 +41,14 @@ alias uu="opkg update && opkg list-upgradable"
 alias ua="opkg update && opkg list-upgradable | cut -f 1 -d ' ' | xargs -r opkg upgrade"
 EOF
 
+apk update
 # 安装nikki/momo
 if [[ "${1:-}" == "nikki" ]]; then
     wget -O - https://github.com/nikkinikki-org/OpenWrt-nikki/raw/refs/heads/main/feed.sh | ash
-    opkg install luci-i18n-nikki-zh-cn
+    apk add luci-i18n-nikki-zh-cn
 elif [[ "${1:-}" == "momo" ]]; then
     wget -O - https://github.com/nikkinikki-org/OpenWrt-momo/raw/refs/heads/main/feed.sh | ash
-    opkg install luci-i18n-momo-zh-cn
+    apk add luci-i18n-momo-zh-cn
     /etc/init.d/sing-box disable
 
     URL=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
